@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>0.0.1</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <!-- Needed so NuGet runtime assets (CsToml.dll) land in the output for deploy. -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModSharp.Sharp.Shared" Version="2.1.123" ExcludeAssets="runtime" />
+        <PackageReference Include="CsToml" Version="1.8.2" />
+        <PackageReference Include="CsToml.Generator" Version="1.8.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\TNMSPluginFoundation\TnmsPluginFoundation\TnmsPluginFoundation.csproj" Private="false" ExcludeAssets="runtime" PrivateAssets="runtime" />
+        <!--
+          Comes in through TnmsPluginFoundation, but loaded from Wuling's shared directory at runtime: referenced here
+          only so it stays out of the output, where the copy step would otherwise pick it up with the other dlls.
+        -->
+        <ProjectReference Include="..\..\Wuling\Wuling.Abstract\Wuling.Abstract.csproj" Private="false" ExcludeAssets="runtime" />
+    </ItemGroup>
+
+    <Target Name="CopyPlugin" AfterTargets="Build" Condition="'$(MOD_SHARP_DIR)' != ''">
+        <Message Text="Copying the plugin files to ModSharp modules directory" Importance="High" />
+        <ItemGroup>
+            <!--
+              Every assembly, not a hand-written list, so a dependency (CsToml) is not left behind. The ones the host
+              provides (ModSharp, TnmsPluginFoundation, Wuling) are ExcludeAssets="runtime" and never reach this directory.
+            -->
+            <PluginFiles Include="$(TargetDir)$(ProjectName).deps.json;$(TargetDir)*.dll" />
+            <PluginFiles Include="$(TargetDir)$(ProjectName).pdb" Condition="Exists('$(TargetDir)$(ProjectName).pdb')" />
+        </ItemGroup>
+        <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(MOD_SHARP_DIR)\modules\$(ProjectName)\reload" />
+        <Message Text="Successfully copied the plugin files" Importance="High" />
+    </Target>
+</Project>

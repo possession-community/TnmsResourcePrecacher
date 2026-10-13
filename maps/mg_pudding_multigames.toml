@@ -1,0 +1,6 @@
+# With workshop_id, the file applies to the map of that workshop item, whatever the file is called.
+# Without it, the file applies to the map it is named after.
+workshop_id = 3242033080
+resources = [
+    # "soundevents/soundevents_example.vsndevts",
+]
